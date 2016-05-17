@@ -44,14 +44,20 @@ func HasAttr(attr string, value string, node *html.Node) bool {
 	return false
 }
 
+// HasType returns true if an html dom element matches the given type.
+func HasType(nodeType string, in *html.Node) bool {
+	return in.Type == html.ElementNode && in.Data == nodeType
+}
+
 // ParseNodeAttr traverses the dom tree, and executes the parse function on each node with the matching
-// value for the given attr.
-func ParseNodeAttr(attr string, value string, in *html.Node, parse func(*html.Node)) {
+// value for the given attr. It also takes a chan interface{}, to which any output from the parse function
+// can be passed.
+func ParseNodeAttr(attr string, value string, in *html.Node, c chan interface{}, parse func(*html.Node, chan interface{})) {
 	if HasAttr(attr, value, in) {
-		parse(in)
+		parse(in, c)
 	}
-	for c := in.FirstChild; c != nil; c = c.NextSibling {
-		ParseNodeAttr(attr, value, c, parse)
+	for node := in.FirstChild; node != nil; node = node.NextSibling {
+		ParseNodeAttr(attr, value, node, c, parse)
 	}
 	return
 }
